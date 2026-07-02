@@ -1,27 +1,25 @@
 # Tasks
 
-## Project status
-- **Current phase:** Phase 1 — Problem Definition and Scope
-- **Current focus:** Proje onayının ardından proje dökümantasyonunun ve görev takviminin kurulması.
-- **Last updated:** 2026-06-28
+Bu dosya, LATEX-GURU projemin geliştirme aşamalarını, yapılan işleri ve gelecek planlamalarını detaylı bir şekilde takip etmek için kullanılır.
+
+## Project Status
+- **Current Phase:** Phase 4 - Vector Database & Embedding Integration
+- **Current Focus:** Üretilen temiz LaTeX metinlerinin akıllı parçalara ayırma stratejisiyle bölünmesi ve ChromaDB'ye basılması
+- **Last Updated:** 2026-07-03
 
 ---
 
 ## Backlog
-- [ ] Phase 2: Online Topoloji PDF kitabını seç ve `data/` klasörüne ekle
-- [ ] Phase 2: Python ile PDF sayfa ayıklama (parsing) scriptini yaz
-- [ ] Phase 3: ChromaDB vektör veri tabanı entegrasyonunu tamamla
-- [ ] Phase 4: Metin tabanlı arama için Streamlit arayüzünü tasarla
+- [ ] **Phase 4.2:** Parçalanan LaTeX metinleri için text-embedding vektör dönüşümlerini entegre et
+- [ ] **Phase 4.3:** ChromaDB koleksiyon yapısını oluştur ve vektörleri yerel diske indexle
+- [ ] **Phase 5:** Retrieval (Arama) mekanizmasını kurarak formül bazlı eşleşme başarı oranını test et
+- [ ] **Phase 6:** Kullanıcı arayüzü (CLI veya Streamlit MVP) geliştirerek sistemi test edilebilir hale getir
 
 ## In Progress
-- [/] Phase 1: Kapsam tanımlama (PROJECT_CONTEXT.md tamamlandı, TASKS.md oluşturuluyor)
-- [ ] Phase 1: Konfigürasyon yönetimi için `config.yaml` altyapısının hazırlanması
+- [/] **Phase 4.1:** `config.yaml` parametrelerine uygun (`chunk_size: 1000`, `chunk_overlap: 200`) matematiksel metin parçalama (chunking) algoritmasının yazılması
 
 ## Done
-- [x] Proje fikrinin ve online kitap kapsamının eğitmen tarafından onaylanması
-
----
-
-## Milestones
-### Milestone 1 (Gün 3)
-- [ ] Proje başlangıç dökümanları (Context, Tasks) GitHub üzerinde yayında.
+- [x] **Milestone 1:** Proje vizyonunun belirlenmesi, `PROJECT_CONTEXT.md` ve `config.yaml` altyapısının kurulması
+- [x] **Phase 1:** `venv` sanal ortamının kurulması ve `requirements.txt` bağımlılık listesinin dökülmesi
+- [x] **Phase 2:** Windows işletim sistemi için `Poppler-26.02.0` motorunun `pdf2image` kütüphanesine başarıyla entegre edilmesi ve 276 sayfalık Topoloji kitabından ilk 3 sayfalık yüksek çözünürlüklü test görsellerinin üretilmesi
+- [x] **Phase 3:** `google-genai` SDK'sı üzerinden `gemini-2.5-flash` Vision modelinin bağlanması; üretilen sayfa görsellerinin matematiksel semboller, indisler ve `\documentclass` yapısı korunarak kusursuz LaTeX Markdown formatında dışarı aktarılması
