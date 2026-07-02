@@ -1,0 +1,11 @@
+project:
+  name: "topology-rag"
+  version: "1.0.0"
+
+data:
+  raw_pdf_path: "data/topoloji_kitap.pdf"
+  output_image_dir: "data/page_images"
+
+chunking:
+  chunk_size: 1000
+  chunk_overlap: 200
