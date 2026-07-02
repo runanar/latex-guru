@@ -33,3 +33,7 @@ if __name__ == "__main__":
     image_paths = convert_pdf_to_images(pdf_file_path)
     
     print("\n🚀 Mimari Değişiklik Başarılı: Bir sonraki adımda bu görselleri Vision LLM ile temiz LaTeX formatına dönüştüreceğiz!")
+
+# Windows için İndirilenler klasöründeki Poppler bin yolu:
+    poppler_path = r"C:\Users\Pc\Downloads\Release-26.02.0-0\poppler-26.02.0\Library\bin"
+    
