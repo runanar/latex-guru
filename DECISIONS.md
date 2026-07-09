@@ -55,3 +55,35 @@ Bu dosya, proje sürecinde alınan önemli teknik ve mimari kararları kaydetmek
 - Matematiksel semboller, indisler ve teoremler %100 doğrulukla ve standart LaTeX formatında veri tabanına işlenebilecektir.
 
 **Status:** Confirmed
+
+## 4) PDF Sayfalarını Görsele Dönüştürmek İçin Poppler Motoru Seçimi
+**Decision:** `pdf2image` kütüphanesinin arkasında sistem motoru olarak **Poppler (Release-26.02.0-0)** ikili (binary) dosyalarının kullanılması kararlaştırılmıştır.
+
+**Reasoning:**
+- Devasa 276 sayfalık PDF dökümanının tamamını belleğe (RAM) yüklemek sistemi kilitlemekte ve takılmalara yol açmaktadır. 
+- Poppler, `first_page` ve `last_page` parametreleri sayesinde tüm PDF'i taramadan sadece hedef sayfaları izole ve jet hızıyla işleme yeteneğine sahiptir. Anti-aliasing başarısı sayesinde LLM için en net pikselleri üretir.
+
+**Alternatives considered:**
+- **Hafıza Sınırlaması Olmayan Düz Render Modülleri:** PDF'in tamamını hafızaya yükleyerek resmi diske yazmaya çalışan alternatif yöntemler, yüksek kaynak tüketimi ve düşük işleme hızı nedeniyle elenmiştir.
+
+**Consequence:**
+- Windows ortamında çalışabilmesi için Poppler binary klasör yolunun (`poppler_path`) kod içerisinden `r"..."` (raw string) formatında manuel gösterilmesi gerekliliği doğmuştur. Projenin yerel bağımlılık haritasına eklenmiştir.
+
+**Status:** Confirmed
+
+---
+
+## 5) LaTeX Ayıklama Süreci İçin Model ve Güvenlik Altyapısı Seçimi
+**Decision:** Vision LLM katmanı için yeni `google-genai` SDK'sı üzerinden **gemini-2.5-flash** modelinin seçilmesine ve API anahtarı yönetiminin `.env` üzerinden yapılmasına karar verilmiştir.
+
+**Reasoning:**
+- Gemini-2.5-Flash, sayfa görsellerindeki içindekiler tablolarını (`\dotfill`, `\quad`) ve matematik dizgilerini eksiksiz bir şekilde geçerli LaTeX kod bloklarına dönüştürmede en yüksek doğruluğu ve hızı sunmuştur.
+- API anahtarlarının koda gömülmesi ciddi bir güvenlik ihlalidir ve projenin elenme sebebidir. Güvenliğin yerel diske izole edilmesi teknik bir zorunluluktur.
+
+**Alternatives considered:**
+- **Eski google-generativeai kütüphanesi (v1beta API):** Yeni sürüm isimlendirme standartlarına uymadığı ve API tarafında `404 NOT FOUND` model eşleşme hatası fırlattığı için elenmiştir.
+
+**Consequence:**
+- Proje dış dünyaya (Google API bulutuna) bağımlı hale gelmiştir. API anahtarının güvenliği için ana dizine `.env` dosyası kurulmuş ve bu dosyanın GitHub'a sızması `.gitignore` kurallarıyla kesin olarak engellenmiştir.
+
+**Status:** Confirmed
