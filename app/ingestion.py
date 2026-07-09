@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from google import genai
 from PIL import Image
 
-# .env dosyasındaki GEMINI_API_KEY değişkenini sisteme yüklüyoruz
 load_dotenv()
 
 def load_config_file(config_path="config.yaml"):
@@ -13,7 +12,6 @@ def load_config_file(config_path="config.yaml"):
         return yaml.safe_load(f)
 
 def convert_pdf_to_images(pdf_path, output_folder="data/page_images"):
-    """PDF'in sadece ilk 3 sayfasını çok hızlı bir şekilde görsele dönüştürür."""
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
         
@@ -38,27 +36,22 @@ def convert_pdf_to_images(pdf_path, output_folder="data/page_images"):
     return saved_image_paths
 
 def process_images_with_gemini(image_paths):
-    """Görselleri Gemini Vision modeline gönderip temiz LaTeX metnine dönüştürür."""
-    # Google GenAI istemcisini başlatıyoruz (Otomatik olarak GEMINI_API_KEY'i okur)
     client = genai.Client()
-    
     parsed_documents = []
     
-    # Matematiksel sembolleri kaçırmaması için modele vereceğimiz kesin emir (System Prompt):
     prompt = """
     Sen uzman bir matematik ve topoloji veri ayıklama asistanısın. 
-    Sana verilen sayfa görselindeki tüm metinleri, formülleri ve matematiksel sembolleri (örneğin tau, indisler, alt/üst simgeler) hiçbir kayıp olmadan, aynen göründüğü gibi temiz bir Markdown ve LaTeX formatında dizeceksin.
-    metin dışındaki gürültüleri veya sayfa kenarlıklarını yoksay. Sadece içerikteki matematiksel metne odaklan.
+    Sana verilen sayfa görselindeki tüm metinleri, formülleri ve matematiksel sembolleri (örneğin tau, indisler, alt/üst simgeler) 
+    hiçbir kayıp olmadan, aynen göründüğü gibi temiz bir Markdown ve LaTeX formatında dizeceksin.
+    Metin dışındaki gürültüleri veya sayfa kenarlıklarını yoksay. Sadece içerikteki matematiksel metne odaklan.
     """
     
-    print("\n Gemini Vision Katmanı Aktif: Görseller yapay zeka ile okunuyor...")
+    print("\n🧠 Gemini Vision Katmanı Aktif: Görseller yapay zeka ile okunuyor...")
     
     for path in image_paths:
         print(f"🔄 {path} işleniyor...")
-        # Görseli PIL kütüphanesiyle açıyoruz
         img = Image.open(path)
         
-        # Gemini 1.5 Flash modelini çağırıyoruz
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=[img, prompt]
@@ -67,6 +60,20 @@ def process_images_with_gemini(image_paths):
         parsed_documents.append(response.text)
         
     return parsed_documents
+
+def chunk_latex_text(text, chunk_size=1000, chunk_overlap=200):
+    """Metni config değerlerine göre karakter bazlı ve overlap korumalı parçalar."""
+    chunks = []
+    start = 0
+    
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        # Bir sonraki başlangıç noktasını overlap kadar geriye çekiyoruz:
+        start += (chunk_size - chunk_overlap)
+        
+    return chunks
 
 if __name__ == "__main__":
     config = load_config_file()
@@ -78,8 +85,17 @@ if __name__ == "__main__":
     # 2. Görsel -> Temiz LaTeX Metni
     results = process_images_with_gemini(image_paths)
     
-    # Ekranda test etmek için 2. sayfanın (içerik veya sembol barındıran sayfa) çıktısına bakalım
-    if len(results) > 1:
-        print("\n - Gemini'den Gelen Kusursuz Matematiksel Çıktı -")
-        print(results[1][:600]) # İlk 600 karakteri görelim
-        print("---------------------------------------------------------")
+    # Birleştirilmiş tam metni ve parçaları tutalım
+    full_latex_text = "\n\n".join(results)
+    
+    # config.yaml içindeki chunking ayarlarını çekiyoruz
+    c_size = config["chunking"]["chunk_size"]
+    c_overlap = config["chunking"]["chunk_overlap"]
+    
+    # 3. Metni Parçalara Ayırma (Chunking)
+    text_chunks = chunk_latex_text(full_latex_text, chunk_size=c_size, chunk_overlap=c_overlap)
+    
+    print("\n✂️ Metin Parçalama Tamamlandı!")
+    print(f"📦 Toplam Oluşan Parça (Chunk) Sayısı: {len(text_chunks)}")
+    print(f"📐 İlk Parçanın Uzunluğu: {len(text_chunks[0])} karakter.")
+    print("---------------------------------------------------------")
