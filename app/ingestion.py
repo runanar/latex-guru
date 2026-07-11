@@ -4,6 +4,8 @@ from pdf2image import convert_from_path
 from dotenv import load_dotenv
 from google import genai
 from PIL import Image
+import chromadb
+from chromadb.utils import embedding_functions
 
 load_dotenv()
 
@@ -17,7 +19,7 @@ def convert_pdf_to_images(pdf_path, output_folder="data/page_images"):
         
     poppler_path = r"C:\Users\Pc\Downloads\Release-26.02.0-0\poppler-26.02.0\Library\bin"
     
-    print("📸 PDF'in ilk 3 sayfası görsele dönüştürülüyor...")
+    print(" PDF'in ilk 3 sayfası görsele dönüştürülüyor...")
     images = convert_from_path(
         pdf_path, 
         dpi=150, 
@@ -46,14 +48,14 @@ def process_images_with_gemini(image_paths):
     Metin dışındaki gürültüleri veya sayfa kenarlıklarını yoksay. Sadece içerikteki matematiksel metne odaklan.
     """
     
-    print("\n🧠 Gemini Vision Katmanı Aktif: Görseller yapay zeka ile okunuyor...")
+    print("\n Gemini Vision Katmanı Aktif: Görseller yapay zeka ile okunuyor...")
     
     for path in image_paths:
-        print(f"🔄 {path} işleniyor...")
+        print(f"{path} işleniyor...")
         img = Image.open(path)
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.5-flash',
             contents=[img, prompt]
         )
         
@@ -70,10 +72,38 @@ def chunk_latex_text(text, chunk_size=1000, chunk_overlap=200):
         end = start + chunk_size
         chunk = text[start:end]
         chunks.append(chunk)
-        # Bir sonraki başlangıç noktasını overlap kadar geriye çekiyoruz:
         start += (chunk_size - chunk_overlap)
         
     return chunks
+
+def save_to_vector_db(chunks):
+    """Parçalanmış LaTeX metinlerini yerel ChromaDB veri tabanına indeksler."""
+    print("\n Yerel ChromaDB bağlantısı kuruluyor...")
+    
+    # data/chroma_db klasörü altında kalıcı (persistent) bir veri tabanı oluşturuyoruz
+    chroma_client = chromadb.PersistentClient(path="data/chroma_db")
+    
+    # Matematiksel metinleri vektöre çevirecek yerel embedding fonksiyonunu tanımlıyoruz
+    # Default model: all-MiniLM-L6-v2 (hafif, hızlı ve etkilidir)
+    embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2"
+    )
+    
+    # 'topology_collection' adında bir koleksiyon oluşturuyoruz veya varsa açıyoruz
+    collection = chroma_client.get_or_create_collection(
+        name="topology_collection",
+        embedding_function=embedding_fn
+    )
+    
+    # ChromaDB'ye ekleme yaparken her parça için benzersiz ID'ler üretmeliyiz
+    ids = [f"id_{i}" for i in range(len(chunks))]
+    
+    print("🔄 Metin parçaları vektörleştiriliyor ve veri tabanına yazılıyor...")
+    collection.add(
+        documents=chunks,
+        ids=ids
+    )
+    print("Vektör veri tabanı kaydı başarıyla tamamlandı!")
 
 if __name__ == "__main__":
     config = load_config_file()
@@ -84,18 +114,16 @@ if __name__ == "__main__":
     
     # 2. Görsel -> Temiz LaTeX Metni
     results = process_images_with_gemini(image_paths)
-    
-    # Birleştirilmiş tam metni ve parçaları tutalım
     full_latex_text = "\n\n".join(results)
     
-    # config.yaml içindeki chunking ayarlarını çekiyoruz
+    # 3. Metni Parçalara Ayırma (Chunking)
     c_size = config["chunking"]["chunk_size"]
     c_overlap = config["chunking"]["chunk_overlap"]
-    
-    # 3. Metni Parçalara Ayırma (Chunking)
     text_chunks = chunk_latex_text(full_latex_text, chunk_size=c_size, chunk_overlap=c_overlap)
     
-    print("\n✂️ Metin Parçalama Tamamlandı!")
-    print(f"📦 Toplam Oluşan Parça (Chunk) Sayısı: {len(text_chunks)}")
-    print(f"📐 İlk Parçanın Uzunluğu: {len(text_chunks[0])} karakter.")
+    print("\n Metin Parçalama Tamamlandı!")
+    print(f" Toplam Oluşan Parça (Chunk) Sayısı: {len(text_chunks)}")
+    
+    # 4. Vektör Veri Tabanına Kayıt
+    save_to_vector_db(text_chunks)
     print("---------------------------------------------------------")
