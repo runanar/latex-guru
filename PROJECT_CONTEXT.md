@@ -1,62 +1,49 @@
 # Project Context
 
-Bu dosya, projenin arka planını, kapsam sınırlarını ve temel varsayımlarını açıklamak için kullanılır.
-
 ## 1. Project Title
-LaTeX-Guru: Topoloji Multimodal RAG Asistanı
+Vision-RAG: El Yazısı Destekli Matematik ve Topoloji Kitabı Asistanı
 
 ## 2. Project Goal
-Bu projenin temel amacı; bilgisayar basımı temiz bir online Topoloji PDF kitabını sayfa bazlı indeksleyerek güçlü bir RAG pipeline'ı kurmak; kullanıcının klavyeyle yapacağı aramalarda ilgili teorem ve tam sayfa numarasını getirmek, sistem stabil çalıştıktan sonra ise kullanıcının el yazısı formül fotoğraflarını LaTeX'e çevirip kitapta aratabileceği Vision katmanını entegre etmektir.
+Bu projenin temel amacı: Kullanıcıların el yazısıyla tuttuğu topoloji notlarının veya sorularının fotoğraflarını çekerek, dijital topoloji dökümanları içinde anlamsal arama yapabilmesini ve ilgili orijinal kitaba/LaTeX formüllerine doğrudan ulaşmasını sağlamaktır.
 
 ## 3. Business / Use Case Context
-Academic Domain Document Assistant / Internal Knowledge Assistant.
+Internal Knowledge / Academic Education Assistant (Matematik ve Akademi alanı).
 
 ## 4. Problem Statement
-Topoloji gibi yoğun matematiksel sembol ve teorem içeren alanlarda, dijital dökümanlar içinde spesifik formüllere veya ispatlara sayfa bazlı hızlı erişim sağlamak zordur. Ayrıca el yazısı sembollerin doğrudan taranması gürültülü veri ürettiğinden, temiz bir dijital kaynak üzerinden güvenilir bir RAG yapısı kurmak ve deneysel aşamada el yazısı girdileri bu temiz kaynağa bağlamak kritik bir ihtiyaçtır.
+Matematik ve topoloji alanındaki kaynaklar ağır LaTeX formülleri ve özel semboller içerir. Öğrencilerin veya bu alanda çalışan kişilerin el yazısıyla aldığı notları veya çözemedikleri soruları dijital dökümanlarda düz metin olarak aratması imkansızdır. Standart metin tarayıcılar bu sembolleri bozduğu için geleneksel RAG sistemleri bu alanda yetersiz kalmaktadır.
 
 ## 5. Target User
-Matematik Bölümü öğrencileri, akademisyenler ve araştırmacılar.
+Matematik bölümü öğrencileri, akademisyenler ve topoloji çalışan araştırmacılar.
 
 ## 6. Target Workflow
-Kullanıcı Arama Metni/LaTeX Girdisi → Vektör Veri Tabanı Sorgusu (RAG) → İlgili Sayfa Metninin ve Kitap Sayfa Numarasının Getirilmesi → (İlerleyen Aşamada: El Yazısı Fotoğrafı → Vision LLM ile LaTeX Dönüşümü → RAG).
+Handwritten Image Input → Gemini Vision Processing (Text/LaTeX Extraction) → Semantic Retrieval (ChromaDB) → Context Matched Output
 
 ## 7. In Scope
-Bu proje kapsamında yapılacaklar:
-- Online dijital Topoloji PDF kitabının sayfa tabanlı olarak metin ve LaTeX içeriklerinin ayıklanması.
-- Ayıklanan sayfaların sayfa numarası metadata'ları ile ChromaDB/FAISS üzerinde indekslenmesi.
-- Kullanıcının arama yapabileceği Streamlit tabanlı bir MVP arayüzü.
-- (Aşama 2) El yazısı formül fotoğraflarını dijital arama girdisine dönüştüren Vision LLM prompt stratejisi.
+- PDF dökümanının ilk 3 sayfasının görsellere dönüştürülmesi ve Gemini ile temiz LaTeX metnine çevrilmesi.
+- 1000 karakter genişliğinde ve 200 karakter overlap payı olan chunking algoritması.
+- Yerel ChromaDB (all-MiniLM-L6-v2) vektör veri tabanı entegrasyonu.
+- Kullanıcının el yazısı fotoğrafını yükleyebileceği Streamlit arayüzü.
+- El yazısı fotoğrafını anlık olarak okuyan ikinci bir Gemini Vision hattı.
 
 ## 8. Out of Scope
-Bu proje kapsamında yapılmayacaklar:
-- Sıfırdan bir LLM veya matematik modeli eğitmek.
-- El yazısı notların tamamını sıfırdan OCR scriptleri ile temizlemeye çalışmak.
+- Tüm kitabın (200+ sayfa) tek seferde end-to-end taranması (Maliyet ve rate-limit kısıtlaması nedeniyle ilk 3 sayfa MVP kapsamındadır).
+- Fine-tuning.
 
 ## 9. Input Types
-- [PDF] Sistem kütüphanesini oluşturacak bilgisayar basımı temiz online Topoloji kitabı.
-- [Görsel] İlerleyen aşamada test için yüklenecek anlık el yazısı formül fotoğrafları.
+- PDF (Kaynak kitap dökümanı)
+- PNG / JPG (Kullanıcının yükleyeceği el yazısı not görseli)
 
 ## 10. Expected Output
-- Arama sorgusuna karşılık gelen en doğru teorem/tanım metni.
-- Bilginin yer aldığı orijinal kitabın sayfa numarası referansı.
+- Anlamsal olarak eşleşen döküman parçası ve orijinal LaTeX formülleri.
 
 ## 11. Technical Direction
-### Initial tech choices
-- **Language:** Python
-- **Framework:** LangChain
-- **Interface:** Streamlit
-- **Vector DB:** ChromaDB
-- **Config Management:** YAML
+### Planned components
+- pdf2image (Document loader)
+- Gemini API pipeline (Vision parsing & Handwritten text extraction)
+- Character-based chunking
+- all-MiniLM-L6-v2 (Embedding model)
+- ChromaDB (Vector DB)
+- Streamlit (Interface)
 
 ## 12. Constraints
-- [Time constraint] 35 günlük bitirme projesi takvimi.
-- [API budget constraint] İkinci aşamada kullanılacak Vision LLM modellerinin bütçe sınırı.
-
-## 13. Assumptions
-- Kullanılacak online topoloji kitabının dijital metin katmanının temiz olduğu varsayılır.
-
-## 14. Risks
-- Matematiksel sembollerin vektör uzayında birbirine yakınsaması nedeniyle arama kalitesinin düşmesi (Weak retrieval).
-
-## 15. Success Criteria
-- Klavyeden girilen 5 farklı topolojik kavram sorgusunda, sistemin doğru sayfayı ve döküman referansını %90 doğrulukla getirebilmesi.
+- API bütçesi ve model istek limitleri.

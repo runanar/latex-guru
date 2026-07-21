@@ -1,89 +1,104 @@
 # Decisions
 
-Bu dosya, proje sürecinde alınan önemli teknik ve mimari kararları kaydetmek için kullanılır.
 
----
-
-## 1) Çekirdek Veri Kaynağı Olarak Online Dijital Kitap Seçimi
-**Decision:** Projede veri havuzu olarak basımı online bir Topoloji PDF kitabının kullanılması kararlaştırılmıştır.
+## 1) Veri Kaynağı: Neden El Yazısı Yerine Dijital Kitap Seçildi
+**Decision:** Projede veri havuzu olarak basımı online olan bir Topoloji PDF kitabını kullanmaya karar verdim.
 
 **Reasoning:**
-- El yazısı notlar üzerinde yapılan ilk OCR testlerinde, matematiksel sembollerin standardizasyonu bozduğu görülmüştür.
-- Projenin kısıtlı 35 günlük takvimi göz önüne alındığında, zamanın el yazısı temizleme scriptlerine değil de projenin asıl kalbi olan RAG mimarisine harcanması bir önceliktir.
+- El yazısı PDF'ler ile yaptığım OCR testlerinde karmaşık matematiksel sembolleri çok bozduğunu fark ettim.
+- Proje için vakit kısıtlı ve asıl önemli kısım olan RAG kısmına odaklanmak daha önemli. O yüzden 21 adet el yazısı PDF'i tek tek temizlemektense dijital kitabı kullanmak çok daha temiz ve güvenilir.
+
+**Consequence:**
+- 'data/` klasörüne eklediğim online dijital PDF kitabı sayesinde veri tabanını besleme adımları çok daha sağlıklı ve sorunsuz şekilde yürüdü.
+
+**Status:** Confirmed
+
+
+## 2) Vision-RAG Architecture & Parsing Strategy Revision
+**Decision:** Başlangıçta kullandığım 'PyMuPDF' ve 'pdfplumber` gibi standart metin okuma kütüphanelerini kullanmaktan vazgeçtim. Bunun yerine sayfaları yüksek çözünürlüklü resme çevirip Gemini Vision aracılığıyla RAG mimarisine geçtim.
+
+**Reasoning:**
+- Geleneksel kütüphaneler topoloji sembollerini ve matematiksel sembolleri okuyamıyor, sembolü düz yazı gibi okuyup projede bilgi kaybı yaratıyordu (weak retrieval).
+- Matematiksel sembollerin hatasız ve eksiksiz olması gerekiyordu bu yüzden bu riski ortadan kaldırmak için projeyi Vision-RAG mimarisine taşıdım. Sayfaları resim olarak Gemini'ye okutarak tüm sembollerin kusursuz ve temiz bir Latex çıktısı olarak veri tabanına yazılmasını sağladık.
+
+**Consequence:**
+- Matematiksel semboller, indisler ve teoremler yüksek doğrulukla ve standart LaTeX formatında veri tabanına işlenebildi.
+
+**Status:** Confirmed
+
+
+## 3) PDF Sayfalarını Görsele Dönüştürmek İçin Poppler Motoru Seçimi
+**Decision:** 'pdf2image` kütüphanesinin arkasında çalışması için sistem motoru olarak Poppler kullanmaya karar verdim.
+
+**Reasoning:**
+- 276 sayfalık PDF kitabı tek seferde bilgisayarın hafızasına yüklemeye kalkınca sistem çok zorlanıyordu.
+- Poppler motorunun 'first_page` ve 'last_page' ayarları sayesinde tüm PDF'i değil sadece hedeflediğim sayfaları hızlıca okuyabildim. Ayrıca görüntü kalitesi çok iyi olduğu için kullandığım Gemini yazıları çok net okuyabildi.
 
 **Alternatives considered:**
-- El yazısı 21 adet PDF'in tamamını Vision LLM pipeline'ı ile tek tek text tabanlı Latex metnine dönüştürmek hata riski nedeniyle ve projenin %100 sağlıklı ilerleyebilmesi sebebiyle elendi.
+- **Hafıza Sınırlaması Olmayan Düz Render Modülleri:** PDF'in tamamını hafızaya yükleyerek resmi diske yazmaya çalışan diğer yöntemler, yüksek kaynak tüketimi ve düşük işleme hızı nedeniyle elendi.
 
 **Consequence:**
-- `data/` klasörüne eklenecek olan online dijital PDF sayesinde `PyMuPDF` / `LangChain` parsing adımları %100 doğrulukla ve temiz LaTeX kodlarıyla yürütülebilecektir.
+- Windows ortamında çalışabilmesi için Poppler binary klasör yolunun 'poppler_path' kod içerisinden raw string formatında manuel gösterilmesi gerekliliği doğdu.
 
 **Status:** Confirmed
 
----
 
-## 2) Git Workflow ve Branch Ayrımı
-**Decision:** Doğrudan `main` branch üzerinde geliştirme yapılması durdurulmuş ve tüm süreç `student/rana-nur-ceylan` branch'ine taşınmıştır.
-
-**Reasoning:**
-- `guide.md` kurallarının 7.3 maddesi uyarınca `main` branch'in temiz ve kontrollü bir alan olarak korunması gerekmektedir.
-
-**Consequence:**
-- Geliştirme disiplini tam olarak sağlanacak, hocanın yapacağı kontrollerde branch activity kurallara uygun görünecektir.
-
-**Status:** Confirmed
-
----
-
-## 3) Matematiksel Sembol Kaybı ve Parsing Stratejisi Revizyonu
-**Decision:** Standart ham metin ayıklama yöntemi (`get_text("text")`), $\tau$ gibi matematiksel sembolleri ve indisleri sildiği için iptal edilmiş; karakter haritasını koruyan gelişmiş bir yapıya geçilmesine karar verilmiştir.
+## 4) Model ve Güvenlik Altyapısı Seçimi
+**Decision:** Görselleri okutmak için yeni 'google-genai' kütüphanesi üzerinden gemini-3.5-flash modelini seçtim. API anahtarını güvenlik için koda yazmayıp '.env' dosyasına gizledim.
 
 **Reasoning:**
-- Ham metin okunduğunda topolojik semboller kaybolmakta ve bu durum RAG sisteminde "Weak Retrieval" (Zayıf Arama) riskini doğurmaktadır.
-- Temiz bir arama deneyimi için sembollerin eksiksiz korunması başarı kriteridir.
-
-**Status:** Proposed
----
-
-## 3) Kütüphane Tabanlı Metin Ayıklama Sorunu ve Vision-RAG Mimarisine Geçiş
-**Decision:** `PyMuPDF` ve `pdfplumber` kütüphanelerinin matematiksel topoloji sembollerini ($\tau$) `t` karakterine dönüştürerek bilgi kaybı yaratması sebebiyle, kütüphane tabanlı düz metin ayıklama (text parsing) yaklaşımı tamamen iptal edilmiştir. Projenin veri besleme (ingestion) aşaması, sayfaların yüksek çözünürlüklü görsellere dönüştürülüp bir Vision LLM (Gemini-1.5-Flash/Pro) aracılığıyla doğrudan temiz markdown/LaTeX formatında yapılandırılması mimarisine taşınmıştır.
-
-**Reasoning:**
-- Geleneksel PDF kütüphaneleri font haritalama hatası yapmakta ve "Weak Retrieval" riski doğurmaktadır.
-- `PROJECT_CONTEXT.md` içinde belirtilen "Vision Katmanı Entegrasyonu" hedefi, projenin en başına (Ingestion aşamasına) çekilerek risk avantaja dönüştürülmüştür.
-
-**Consequence:**
-- Matematiksel semboller, indisler ve teoremler %100 doğrulukla ve standart LaTeX formatında veri tabanına işlenebilecektir.
-
-**Status:** Confirmed
-
-## 4) PDF Sayfalarını Görsele Dönüştürmek İçin Poppler Motoru Seçimi
-**Decision:** `pdf2image` kütüphanesinin arkasında sistem motoru olarak **Poppler (Release-26.02.0-0)** ikili (binary) dosyalarının kullanılması kararlaştırılmıştır.
-
-**Reasoning:**
-- Devasa 276 sayfalık PDF dökümanının tamamını belleğe (RAM) yüklemek sistemi kilitlemekte ve takılmalara yol açmaktadır. 
-- Poppler, `first_page` ve `last_page` parametreleri sayesinde tüm PDF'i taramadan sadece hedef sayfaları izole ve jet hızıyla işleme yeteneğine sahiptir. Anti-aliasing başarısı sayesinde LLM için en net pikselleri üretir.
+- Eski kütüphane sürümü güncelliğini yitirdiği için 404 NOT FOUND hatası veriyordu, ben de Google'ın güncel yazılım Gemini Flash'e geçtim, sayfalardaki yoğun matematiksel formülleri ve tabloları yapısal bütünlüğünü koruyarak LaTeX formatına kolayca aktardı.
+- API key'i koda yazıp GitHub'a atsaydım çok büyük bir güvenlik açığı olurdu. Bu yüzden '.env' dosyası açıp '.gitignore` ile orayı dış dünyaya kapattım.
 
 **Alternatives considered:**
-- **Hafıza Sınırlaması Olmayan Düz Render Modülleri:** PDF'in tamamını hafızaya yükleyerek resmi diske yazmaya çalışan alternatif yöntemler, yüksek kaynak tüketimi ve düşük işleme hızı nedeniyle elenmiştir.
+- **Eski google-generativeai kütüphanesi (v1beta API):** Yeni sürüm isimlendirme standartlarına uymadığı için elendi.
 
 **Consequence:**
-- Windows ortamında çalışabilmesi için Poppler binary klasör yolunun (`poppler_path`) kod içerisinden `r"..."` (raw string) formatında manuel gösterilmesi gerekliliği doğmuştur. Projenin yerel bağımlılık haritasına eklenmiştir.
+- Proje Google API bulutuna bağımlı hale geldi. API anahtarının güvenliği için ana dizine '.env' dosyası kuruldu ve bu dosyanın GitHub'a sızmasını engellemek için '.gitignore` dosyasını oluşturduk.
+**Status:** Confirmed
+
+
+## 5) Choose Vector Database
+**Decision:** Projenin ana hafızası (vektör veri tabanı) olarak ChromaDB kullanmaya karar verdim.
+
+**Reasoning:**
+- Gidip ekstra bir sunucu kiralamakla veya ağır veritabanları kurmakla uğraşmak istemedim. ChromaDB çok hafif, doğrudan kendi bilgisayarımda çalışıyor ve verileri yerel `persistent' klasörüne kaydedebiliyor.
+- Ayrıca Python'la ve kullandığım metin dönüştürücü modelle 'all-MiniLM-L6-v2' hiçbir sorun çıkarmadan entegre oldu.
 
 **Status:** Confirmed
 
----
 
-## 5) LaTeX Ayıklama Süreci İçin Model ve Güvenlik Altyapısı Seçimi
-**Decision:** Vision LLM katmanı için yeni `google-genai` SDK'sı üzerinden **gemini-2.5-flash** modelinin seçilmesine ve API anahtarı yönetiminin `.env` üzerinden yapılmasına karar verilmiştir.
+## 6) Chunking
+**Decision:** Kitaptaki yazıları veri tabanına kaydederken boyutlarını sabitledim,'1000 character chunk_size' parçalara böldüm ve aralarında '200 character chunk_overlap' bıraktım.
 
 **Reasoning:**
-- Gemini-2.5-Flash, sayfa görsellerindeki içindekiler tablolarını (`\dotfill`, `\quad`) ve matematik dizgilerini eksiksiz bir şekilde geçerli LaTeX kod bloklarına dönüştürmede en yüksek doğruluğu ve hızı sunmuştur.
-- API anahtarlarının koda gömülmesi ciddi bir güvenlik ihlalidir ve projenin elenme sebebidir. Güvenliğin yerel diske izole edilmesi teknik bir zorunluluktur.
+- Topolojide teoremler ve tanımlar gerçekten çok uzun. Eğer rastgele bölseydim, formüllerin tam ortasından ikiye kesilme riski vardı. 1000 karakter,bir formülün bütün halinde sığması için ideal olan dengeydi.
+- Yine de sınırda kalan bir cümle olursa diye 200 karakterlik örtüşme payı koydum ki önceki parçayla sonraki parça birbirine bağlansın, anlam kopmasın.
 
-**Alternatives considered:**
-- **Eski google-generativeai kütüphanesi (v1beta API):** Yeni sürüm isimlendirme standartlarına uymadığı ve API tarafında `404 NOT FOUND` model eşleşme hatası fırlattığı için elenmiştir.
+**Status:** Confirmed
+
+
+## 7) Çoklu Sayfa Birleştirme ve Bütünsel Retrieval Mantığı
+**Decision:** Kullanıcının yüklediği defter sayfalarını ayrı ayrı aratmak yerine, hepsindeki yazıları tek bir büyük metin havuzunda birleştirip ChromaDB'de öyle aratmaya karar verdim.
+
+**Reasoning:**
+- Biz öğrenciler not tutarken genelde bir konu arka sayfaya sarkabiliyor. Sayfaları parça parça aratırsam sistem konunun bağlamını kaybediyordu.
+- Hepsini birleştirip arattığımda (bütünsel arama), arama motorunun kitaptaki asıl konuyu bulma ihtimali ve doğruluğu çok ciddi oranda arttı.
 
 **Consequence:**
-- Proje dış dünyaya (Google API bulutuna) bağımlı hale gelmiştir. API anahtarının güvenliği için ana dizine `.env` dosyası kurulmuş ve bu dosyanın GitHub'a sızması `.gitignore` kurallarıyla kesin olarak engellenmiştir.
+- Sayfalar arası bağlam anlam korundu ve arama motorunun isabet oranı en üst seviyeye çıkarıldı.
+
+**Status:** Confirmed
+
+
+## 8) Bağımlılık Yönetiminde pyproject.toml Standardına Geçiş
+**Decision:** Klasik 'requirements.txt' dosyasını sildim. Yerine güncel Python standardı olan 'pyproject.toml` yapısını kurdum ve kütüphanelere üst sürüm sınırları ekledim.
+
+**Reasoning:**
+- TOML dosyası 'requirements.txt' dosyasından daha profesyonel ve hocamızın da projemizde görmek istediği bir dosya türüydü. Ayrıca projenin gelecekte de düzgün çalışabilmesi için modern standart.
+- Kütüphanelere de sürüm sınırı koydum ki, ileriki zamanlarda bir kütüphaneye büyük bir güncelleme gelirse benim kodlarımı bozmasın.
+
+**Consequence:**
+- Proje modern Python standartlarına kavuştu, sürüm güncellemelerinden kaynaklı çökme riskleri tamamen ortadan kaldırıldı.
 
 **Status:** Confirmed

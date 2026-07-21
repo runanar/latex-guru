@@ -12,7 +12,7 @@ def search_in_vector_db(query_text, n_results=1):
         model_name="all-MiniLM-L6-v2"
     )
     
-    # Dün gece oluşturduğumuz koleksiyonu geri çağırıyoruz
+    # Oluşturduğumuz koleksiyonu geri çağırıyoruz
     collection = chroma_client.get_collection(
         name="topology_collection",
         embedding_function=embedding_fn
