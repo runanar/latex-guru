@@ -1,7 +1,5 @@
 # Ödev Takip Günlüğü (Tasks)
 
-Bu dosyada bitirme projem için hangi aşamada olduğumu, neleri bitirdiğimi ve sırada ne olduğunu takip ediyorum.
-
 ## Projenin Şu Anki Durumu
 - **Şu anki Aşama:** Phase 6 — Projeyi Toparlama ve Teslim Aşaması
 - **Şu an odaklandığım şey:** Hocanın istediği döküman kontrollerini yapmak, TOML dosyasını düzenlemek ve GitHub'a son halini atmak.

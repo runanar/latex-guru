@@ -38,6 +38,7 @@ def parse_handwritten_image(image):
     prompt = """
     Görseldeki matematiksel soruyu veya kavramı oku.
     Bize sadece arama motorunda aratabileceğimiz, temiz, anlaşılır ve sadeleştirilmiş bir metin çıktısı ver.
+    Matematiksel ifadeleri $ ... $ veya $$ ... $$ LaTeX formatında tut ama metinlerin okunabilir, düzenli ve paragraflar halinde olmasını sağla.
     Ekstra açıklama yazma.
     """
     
@@ -52,13 +53,14 @@ def clean_latex_to_normal_text(raw_text):
     client = genai.Client()
     
     prompt = f"""
-    Sana verilen aşağıdaki matematiksel metni incele. 
-    İçinde bulunan tüm '\\text{{...}}', '\\setminus', '\\cup', '\\cap', '\\emptyset' gibi çiğ LaTeX kodlarını temizle.
-    Bunları normal insanların okuyabileceği akıcı ve düzgün bir Türkçe matematik metnine dönüştür.
-    Örnek: '\\text{{ boş kümeden farklı }}' yerine doğrudan 'boş kümeden farklı' yaz.
-    Örnek: '\\tau = \\{{\\emptyset, X\\}}' gibi temel ifadeleri 'tau = {{boş küme, X}}' veya temiz sembollerle göster.
+    Sana verilen aşağıdaki matematiksel metni incele ve temizle:
     
-    Çıktı tamamen temiz, okunaklı, alt alta satırlar halinde ve akıcı bir Türkçe metin olmalıdır. Kod blokları veya çiğ ters eğik çizgiler (\\) içermemelidir.
+    1. İçinde bulunan tüm '\\text{{...}}', '\\setminus', '\\cup', '\\cap', '\\emptyset' gibi çiğ LaTeX kodlarını temizle. 
+    2. Sembol kodlarını okunaklı matematik sembollerine (τ, ⊆, ∅, ∩, ∪) veya akıcı Türkçe karşılıklarına çevir.
+    3. Metnin başında veya sonunda yer alan '................ 96' gibi sayfa numarası olmayan yarım kalmış nokta zincirlerini ve kesik başlıkları temizle.
+    4. Bunları normal insanların okuyabileceği akıcı ve düzgün bir Türkçe matematik metnine dönüştür.
+    
+    ÇOK ÖNEMLİ: Orijinal metindeki alt başlıkları ve maddeleri KESİNLİKLE alt alta satırlar halinde koru.
     
     Dönüştürülecek Metin:
     {raw_text}
@@ -70,7 +72,7 @@ def clean_latex_to_normal_text(raw_text):
     )
     return response.text
 
-# --- ARAYÜZ TASARIMI ---
+# ARAYÜZ TASARIMI
 st.title("📐 Vision-RAG Topoloji Asistanı")
 st.write("Aynı konuya ait bir ve birden fazla defter sayfasını yükleyin; sistem hepsini tek bir bütün olarak tarayıp en alakalı sonucu getirsin.")
 
@@ -109,8 +111,18 @@ if uploaded_files:
                 except Exception as e:
                     st.error(f"Sayfa {idx+1} okunurken hata oluştu: {e}")
         
-        # Okunan tüm sayfaları tek bir dev metin haline getiriyoruz
-        full_combined_query = " ".join(combined_text_list)
+        # Okunan tüm sayfaları birleştiriyoruz
+        full_combined_query = "\n\n".join(combined_text_list)
+        
+        st.divider()
+        
+        # --- GÖSTERİM 1: TEMİZLENMİŞ SORGU METNİ (Render Edilmiş Matematiksel Metin) ---
+        st.subheader("📝 Notlarınızdan Çıkarılan Temizlenmiş Metin (Arama Sorgusu):")
+        
+        # Satır sonlarını Markdown içindeki paragrama çevirip düzgün LaTeX renderlama yapıyoruz
+        formatted_query = full_combined_query.replace("\n", "  \n")
+        with st.container(border=True):
+            st.markdown(formatted_query)
         
         st.divider()
         
@@ -120,14 +132,16 @@ if uploaded_files:
                 matched_chunks = search_top_chunks(full_combined_query, n_results=1)
                 
                 st.success("🎉 Tüm sayfaların bütününe en uygun olan kitap parçası bulundu!")
-                st.subheader("🎯 Kitaptaki Bilgi (Temizlenmiş Metin):")
                 
-                # 3. ADIM: Gelen ham kodu temiz kedi/metin formatına çevirip basıyoruz
+                # 3. ADIM: Gelen ham kodu temiz metin formatına çevirip basıyoruz
                 with st.spinner("✨ Matematiksel metin düzenleniyor..."):
                     cleaned_result = clean_latex_to_normal_text(matched_chunks[0])
                 
+                st.subheader("🎯 Kitaptaki Eşleşen Bilgi:")
+                
+                formatted_output = cleaned_result.replace("\n", "  \n")
                 with st.container(border=True):
-                    st.write(cleaned_result)
+                    st.markdown(formatted_output)
                         
             except Exception as e:
                 st.error(f"Arama yapılırken bir hata oluştu: {e}")
