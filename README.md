@@ -9,7 +9,7 @@ LaTeX-Guru, öğrencilerin derslerde tuttuğu el yazısı matematiksel notları 
 
 ## 🚀 Öne Çıkan Özellikler
 
-* **Vision OCR (Gemini 3.5 Flash):** El yazısı notlardaki karmaşık matematiksel sembolleri ($\tau$, $\subseteq$, limit, türev vb.) ve yapıları yüksek doğrulukla metne dönüştürür.
+* **Vision OCR (Gemini 3.5 Flash):** El yazısı notlardaki karmaşık matematiksel sembolleri ve yapıları yüksek doğrulukla metne dönüştürür.
 * **Çoklu Sayfa Desteği (Multi-Page Query Fusion):** Birden fazla ders notu sayfasını aynı anda kabul ederek bağlam bütünlüğünü korur.
 * **Anlamsal Vektör Arama (ChromaDB + SentenceTransformers):** Kelime eşleşmesi yerine `all-MiniLM-L6-v2` embedding modeli ile anlamsal yakınlık (Cosine Similarity) üzerinden arama yapar.
 * **LaTeX Metin Düzenleme (Post-Processing):** Vektör veri tabanından dönen karmaşık LaTeX kodlarını kullanıcı dostu, akıcı bir Türkçe matematiksel paragrafa dönüştürür.
@@ -46,8 +46,8 @@ Projeyi sıfır bir bilgisayara kurup çalıştırmak için aşağıdaki adımla
 
 ### Adım 1: Depoyu Klonlayın
 ```bash
-git clone [https://github.com/KULLANICI_ADI/PROJECT_NAME.git](https://github.com/KULLANICI_ADI/PROJECT_NAME.git)
-cd PROJECT_NAME
+git clone [https://github.com/runanar/latex-guru.git](https://github.com/runanar/latex-guru.git)
+cd latex-guru
 
 Adım 2: Bağımlılıkları Yükleyin
 Proje, modern Python standartlarına (pyproject.toml) uygun olarak yapılandırılmıştır:
@@ -55,7 +55,7 @@ Proje, modern Python standartlarına (pyproject.toml) uygun olarak yapılandır�
 pip install -e .
 
 Adım 3: Çevre Değişkenlerini (API Key) Ayarlayın
-Proje kök dizininde .env adında bir dosya oluşturun ve Google Gemini API anahtarınızı ekleyin (Örnek yapı için .env.example dosyasına bakabilirsiniz):
+Proje kök dizininde .env adında bir dosya oluşturun ve Google Gemini API anahtarınızı ekleyin :
 
 GEMINI_API_KEY="buraya_gemini_api_keyinizi_yazin"
 
@@ -84,3 +84,7 @@ streamlit run app/ui.py
 ├── pyproject.toml      # Proje bağımlılıkları ve paket yönetimi
 ├── .env.example        # Örnek çevre değişkenleri şablonu
 └── README.md           # Proje dokümantasyonu
+
+
+Demo video link:
+https://www.loom.com/share/48ca5cc6f960477cb513c6ca9cb834c0

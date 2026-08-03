@@ -27,7 +27,7 @@ Sistem iki ana hat (pipeline) üzerinden çalışmaktadır:
 2. **Semantic Vector Search:** Üretilen arama metni 384 boyutlu vektöre dönüştürülüp ChromaDB üzerinde **Cosine Similarity** hesabı ile en yakın teorem/tanım parçasıyla eşleştirilir.
 3. **Post-Processing:** Vektör veritabanından dönen ham LaTeX kodları, ikincil bir LLM süzgecinden geçirilerek akıcı, düzgün biçimlendirilmiş ve okunabilir bir Türkçe matematiksel paragrafa dönüştürülüp Streamlit arayüzünde sunulur.
 
-[Kullanıcı Görseli] ──> (Gemini 3.5 Flash Vision OCR) ──> [Arama Metni]
+[Kullanıcı Görseli] ──> (Gemini 2.5 Flash Vision OCR) ──> [Arama Metni]
                                                                │
                                                                ▼
 [Sonuç Paragrafı] <── (Gemini Post-Processing) <── [ChromaDB Arama (all-MiniLM)]
@@ -49,7 +49,7 @@ Sistem iki ana hat (pipeline) üzerinden çalışmaktadır:
 * **Milisaniyelik Arama Süresi:** Vektör veritabanı sayesinde $O(\log N)$ karmaşıklığında anlık arama sonuçları üretilmiştir.
 * **Modüler Yapı:** Proje, üretim ortamı standartlarına (production-ready) uygun olarak modüler dizin yapısı ve `.env` tabanlı API güvenlik mimarisiyle kurgulanmıştır.
 
-## BONUS
+## EKSTRALAR
 
 ## Neden Alternatifleri Varken Bu Yöntemleri Seçtik?
 
