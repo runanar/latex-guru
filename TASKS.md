@@ -48,3 +48,6 @@
 - [x] Arama sonucunda ekrana karmaşık LaTeX kodları geliyordu. Bunları temizleyip metni herkesin okuyabileceği şekilde Türkçe metne dönüştüren 'clean_latex_to_normal_text` fonksiyonunu yazdım.
 - [x] Eksiğim olduğunu fark edip 'requirements.txt' dosyasını sildim ve onun yerine 'pyproject.toml` dosyasını oluşturdum.
 - [x] 'README.md' dosyasını yazdım, 'CHANGELOG.md' ve 'DECISIONS.md` dökümanlarını son yaptığım değişikliklere göre güncelledim.
+
+- [x] Kitabın kalan sayfalarını da yavaş yavaş sisteme yükleyip ChromaDB veri tabanını büyütmek
+- [x] * Streamlit arayüzünde birkaç kişi aynı anda arama yapınca donmasın diye session state ayarlarına ekleme ve çıkarma yapmak

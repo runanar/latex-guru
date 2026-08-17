@@ -84,7 +84,3 @@ streamlit run app/ui.py
 ├── pyproject.toml      # Proje bağımlılıkları ve paket yönetimi
 ├── .env.example        # Örnek çevre değişkenleri şablonu
 └── README.md           # Proje dokümantasyonu
-
-
-Demo video link:
-https://www.loom.com/share/48ca5cc6f960477cb513c6ca9cb834c0
